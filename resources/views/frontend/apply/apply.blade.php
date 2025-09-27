@@ -37,18 +37,19 @@
 
         <!-- Content Area -->
         <div class="col-md-9 col-lg-9">
-            <!-- Success/Error Messages -->
             @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-primary d-flex align-items-center" role="alert">
+                <div>
+                    {{ session('success') }}
+                </div>
             </div>
             @endif
 
             @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <div>
+                    {{ session('error') }}
+                </div>
             </div>
             @endif
             <div class="tab-content" id="v-pills-tabContent">
@@ -1819,6 +1820,39 @@
             });
         });
     });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const formIds = [
+        'personalInfoForm',
+        'visaTypeForm',
+        'workInfoForm',
+        'educationForm',
+        'familyInfoForm',
+        'travelInfoForm',
+        'previousTravelInfoForm',
+        'otherInfoForm',
+        'declarationForm',
+        'uploadMaterialsForm'
+    ];
 
+    formIds.forEach(formId => {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.addEventListener('submit', function () {
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Please wait while we save your information.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            });
+        }
+    });
+});
 </script>
 @endpush
