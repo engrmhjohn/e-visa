@@ -9,7 +9,7 @@ use PDF;
 
 class PdfController extends Controller
 {
-        public function generateApplicationPdf($applicationId)
+    public function generateApplicationPdf($applicationId)
     {
         // Get the application with all relationships
         $application = ApplicationForm::with([
@@ -17,11 +17,6 @@ class PdfController extends Controller
             'educationInfo', 'travelInfo', 'previousTravelInfo', 
             'otherInfo', 'declaration', 'materials'
         ])->findOrFail($applicationId);
-
-        // Verify ownership
-        if (auth()->check() && auth()->id() !== $application->user_id) {
-            abort(403);
-        }
 
         // Data to pass to the view
         $data = [

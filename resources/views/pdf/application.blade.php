@@ -181,26 +181,26 @@
                 <td class="w-70">
                     @if($application->personalInfo)
                     <div class="box-text">
-                        <p class="m-0"><strong>Family Name:</strong> {{ $application->personalInfo->family_name }}</p>
-                        <p class="m-0"><strong>Given Name:</strong> {{ $application->personalInfo->given_names }}</p>
-                        <p class="m-0"><strong>Other Name:</strong> {{ $application->personalInfo->other_names }}</p>
-                        <p class="m-0"><strong>Siberia Name:</strong> {{ $application->personalInfo->siberia_name }}</p>
-                        <p class="m-0"><strong>Date of Birth:</strong> {{ $application->personalInfo->dob->format('d F Y') }}</p>
-                        <p class="m-0"><strong>Gender:</strong> {{ ucfirst($application->personalInfo->gender) }}</p>
-                        <p class="m-0"><strong>Place of Birth:</strong> {{ $application->personalInfo->birthCountry->name ?? '' }}</p>
-                        <p class="m-0"><strong>Province/State:</strong> {{ $application->personalInfo->province_state }}</p>
-                        <p class="m-0"><strong>City:</strong> {{ $application->personalInfo->city }}</p>
-                        <p class="m-0"><strong>Marital Status:</strong> {{ ucfirst($application->personalInfo->marital_status) }}</p>
-                        <p class="m-0"><strong>Current Nationality:</strong> {{ $application->personalInfo->currentNationality->name ?? '' }}
-                            <p class="m-0"><strong>ID Number:</strong> {{ $application->personalInfo->id_number }}</p>
-                            <p class="m-0"><strong>Other Nationality:</strong> {{ ucfirst($application->personalInfo->other_nationality) }}</p>
-                            <p class="m-0"><strong>Permanent Resident Status:</strong> {{ ucfirst($application->personalInfo->permanent_resident_status) }}</p>
-                            <p class="m-0"> <strong>Previous Nationalities:</strong> {{ ucfirst($application->personalInfo->previous_nationalities) }}</p>
-                            <p class="m-0"><strong>Passport Type:</strong> {{ ucfirst($application->personalInfo->passport_type) }}</p>
-                            <p class="m-0"><strong>Passport Number:</strong> {{ $application->personalInfo->passport_number }}</p>
-                            <p class="m-0"><strong>Issuing Country:</strong> {{ $application->personalInfo->issuingCountry->name ?? '' }}</p>
-                            <p class="m-0"><strong>Place of Issue:</strong> {{ $application->personalInfo->place_of_issue }}</p>
-                            <p class="m-0"><strong>Passport Expiry:</strong> {{ $application->personalInfo->passport_expiration_date->format('d F Y') }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Family Name:</strong> {{ $application->personalInfo->family_name }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Given Name:</strong> {{ $application->personalInfo->given_names }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Other Name:</strong> {{ $application->personalInfo->other_names }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Siberia Name:</strong> {{ $application->personalInfo->siberia_name }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Date of Birth:</strong> {{ $application->personalInfo->dob->format('d F Y') }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Gender:</strong> {{ ucfirst($application->personalInfo->gender) }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Place of Birth:</strong> {{ $application->personalInfo->birthCountry->name ?? '' }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Province/State:</strong> {{ $application->personalInfo->province_state }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>City:</strong> {{ $application->personalInfo->city }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Marital Status:</strong> {{ ucfirst($application->personalInfo->marital_status) }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Current Nationality:</strong> {{ $application->personalInfo->currentNationality->name ?? '' }}
+                        <p class="m-0" style="font-size: 14px;"><strong>ID Number:</strong> {{ $application->personalInfo->id_number }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Other Nationality:</strong> {{ ucfirst($application->personalInfo->other_nationality) }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Permanent Resident Status:</strong> {{ ucfirst($application->personalInfo->permanent_resident_status) }}</p>
+                        <p class="m-0" style="font-size: 14px;"> <strong>Previous Nationalities:</strong> {{ ucfirst($application->personalInfo->previous_nationalities) }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Passport Type:</strong> {{ ucfirst($application->personalInfo->passport_type) }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Passport Number:</strong> {{ $application->personalInfo->passport_number }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Issuing Country:</strong> {{ $application->personalInfo->issuingCountry->name ?? '' }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Place of Issue:</strong> {{ $application->personalInfo->place_of_issue }}</p>
+                        <p class="m-0" style="font-size: 14px;"><strong>Passport Expiry:</strong> {{ $application->personalInfo->passport_expiration_date->format('d F Y') }}</p>
                     </div>
                     @else
                     <p class="gray-color">No personal information provided.</p>
@@ -209,7 +209,7 @@
                 <td class="w-30">
                     @if($application->personalInfo && $application->personalInfo->picture)
                     <div class="photo-container">
-                        <img src="{{asset($application->personalInfo->picture) }}" alt="Applicant Photo">
+                        <img src="{{asset($application->personalInfo->picture) }}" alt="Applicant Photo" style="max-height: 150px;">
                     </div>
                     @endif
                 </td>
