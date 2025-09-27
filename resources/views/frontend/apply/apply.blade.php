@@ -989,14 +989,14 @@
                                                                 <!-- Hidden sections -->
                                                                 <div class="d-none" id="tourist_business_div">
                                                                     <div class="col-lg-12">
-                                                                        <label for="hotel_name" class="form-label required-field">6.1B Hotel Name</label>
+                                                                        <label for="hotel_name" class="form-label">6.1B Hotel Name</label>
                                                                         <input type="text" class="form-control @error('hotel_name') is-invalid @enderror" name="hotel_name" value="{{ old('hotel_name') }}">
                                                                         @error('hotel_name')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                                         @enderror
                                                                     </div>
                                                                     <div class="col-lg-12">
-                                                                        <label for="hotel_address" class="form-label required-field">6.1C Hotel Address</label>
+                                                                        <label for="hotel_address" class="form-label">6.1C Hotel Address</label>
                                                                         <input type="text" class="form-control @error('hotel_address') is-invalid @enderror" name="hotel_address" value="{{ old('hotel_address') }}">
                                                                         @error('hotel_address')
                                                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -1005,7 +1005,7 @@
                                                                 </div>
                                                                 <div class="d-none" id="work_div">
                                                                     <div class="col-lg-4">
-                                                                        <label for="company_approval_letter" class="form-label required-field">Company Approval Letter (JPG, PNG) (max. 2MB)</label>
+                                                                        <label for="company_approval_letter" class="form-label">Company Approval Letter (JPG, PNG) (max. 2MB)</label>
                                                                         <input type="file" id="company_approval_letter" name="company_approval_letter" class="dropify @error('company_approval_letter') is-invalid @enderror" data-max-file-size="2M" data-allowed-file-extensions="jpg jpeg png" data-height="150" accept="image/*" />
                                                                         @error('company_approval_letter')
                                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -1757,69 +1757,52 @@
 @endsection
 @push('script')
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // -----------------------
-        // Visa Category Toggle
-        // -----------------------
-        const visaRadios = document.querySelectorAll('input[name="visa_category"]');
-        const touristBusinessDiv = document.getElementById("tourist_business_div");
-        const workDiv = document.getElementById("work_div");
+$(document).ready(function() {
+    // Visa Category Toggle
+    $('input[name="visa_category"]').change(function() {
+        const value = $(this).val();
+        const touristBusinessDiv = $("#tourist_business_div");
+        const workDiv = $("#work_div");
 
-        function toggleVisaDivs(value) {
-            touristBusinessDiv.classList.add("d-none");
-            workDiv.classList.add("d-none");
+        // Hide both divs first
+        touristBusinessDiv.addClass("d-none");
+        workDiv.addClass("d-none");
 
-            if (value === "tourist" || value === "business") {
-                touristBusinessDiv.classList.remove("d-none");
-            } else if (value === "work") {
-                workDiv.classList.remove("d-none");
-            }
+        // Remove all required classes and attributes
+        $('label[for="hotel_name"], label[for="hotel_address"], label[for="company_approval_letter"]')
+            .removeClass("required-field");
+        $('input[name="hotel_name"], input[name="hotel_address"], input[name="company_approval_letter"]')
+            .removeAttr('required');
+
+        if (value === "tourist" || value === "business") {
+            touristBusinessDiv.removeClass("d-none");
+            $('label[for="hotel_name"], label[for="hotel_address"]').addClass("required-field");
+            $('input[name="hotel_name"], input[name="hotel_address"]').attr('required', 'required');
+        } else if (value === "work") {
+            workDiv.removeClass("d-none");
+            $('label[for="company_approval_letter"]').addClass("required-field");
+            $('input[name="company_approval_letter"]').attr('required', 'required');
         }
-
-        // Initial state
-        const visaChecked = document.querySelector('input[name="visa_category"]:checked');
-        if (visaChecked) {
-            toggleVisaDivs(visaChecked.value);
-        }
-
-        // Change listener
-        visaRadios.forEach(radio => {
-            radio.addEventListener("change", function() {
-                toggleVisaDivs(this.value);
-            });
-        });
-
-        // -----------------------
-        // Declaration Type Toggle
-        // -----------------------
-        const declarationRadios = document.querySelectorAll('input[name="declaration_type"]');
-        const applicantDiv = document.getElementById("applicant_div");
-        const behalfDiv = document.getElementById("behalf_div");
-
-        function toggleDeclarationDivs(value) {
-            applicantDiv.classList.add("d-none");
-            behalfDiv.classList.add("d-none");
-
-            if (value === "applicant") {
-                applicantDiv.classList.remove("d-none");
-            } else if (value === "behalf") {
-                behalfDiv.classList.remove("d-none");
-            }
-        }
-
-        // Initial state
-        const declarationChecked = document.querySelector('input[name="declaration_type"]:checked');
-        if (declarationChecked) {
-            toggleDeclarationDivs(declarationChecked.value);
-        }
-
-        // Change listener
-        declarationRadios.forEach(radio => {
-            radio.addEventListener("change", function() {
-                toggleDeclarationDivs(this.value);
-            });
-        });
     });
+
+    // Trigger change event on page load if any radio is checked
+    $('input[name="visa_category"]:checked').trigger('change');
+
+    // Declaration Type Toggle (unchanged)
+    $('input[name="declaration_type"]').change(function() {
+        const value = $(this).val();
+        $("#applicant_div, #behalf_div").addClass("d-none");
+        
+        if (value === "applicant") {
+            $("#applicant_div").removeClass("d-none");
+        } else if (value === "behalf") {
+            $("#behalf_div").removeClass("d-none");
+        }
+    });
+
+    // Trigger change event on page load if any declaration radio is checked
+    $('input[name="declaration_type"]:checked').trigger('change');
+});
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
