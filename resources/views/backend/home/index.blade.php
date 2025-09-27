@@ -266,7 +266,7 @@
                                                     <i class="far fa-eye"></i>
                                                 </span>
                                             </a>
-                                            <a class="btn btn-sm btn-secondary" href="#" title="Edit Application">
+                                            <a class="btn btn-sm btn-secondary" href="{{ route('admin.applications.edit', $application->id) }}" title="Edit Application">
                                                 <span class="btn-label">
                                                     <i class="far fa-edit"></i>
                                                 </span>

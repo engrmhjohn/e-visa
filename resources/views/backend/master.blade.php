@@ -102,13 +102,14 @@
 
     </script>
 
-    <script>
-        $(document).ready(function() {
-                flatpickr(".flat_date", {
-                dateFormat: "Y-m-d"
-            });
+<script>
+    $(document).ready(function () {
+        flatpickr(".flat_date", {
+            dateFormat: "Y-m-d",
+            allowInput: true
         });
-    </script>
+    });
+</script>
 
     <script>
         $('.delete_unique').click(function(event) {

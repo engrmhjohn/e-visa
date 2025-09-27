@@ -36,11 +36,7 @@
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
-                            @if (Auth::user()->profile_photo_path)
-                            <img src="{{ asset(Auth::user()->profile_photo_path) }}" alt="Avatar" class="avatar-img rounded-circle" />
-                            @else
-                            <img src="{{ asset('backendAssets') }}/img/avatar.png" alt="Avatar" class="avatar-img rounded-circle" />
-                            @endif
+                            <img src="{{ asset('frontendAssets') }}/img/avatar.jpg" alt="Avatar" class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username">
                             <span class="op-7">Hi,</span>
@@ -52,11 +48,7 @@
                             <li>
                                 <div class="user-box">
                                     <div class="avatar-lg">
-                                        @if (Auth::user()->profile_photo_path)
-                                        <img src="{{ asset(Auth::user()->profile_photo_path) }}" alt="image profile" class="avatar-img rounded" />
-                                        @else
-                                        <img src="{{ asset('backendAssets') }}/img/avatar.png" alt="image profile" class="avatar-img rounded" />
-                                        @endif
+                                           <img src="{{ asset('frontendAssets') }}/img/avatar.jpg" alt="Avatar" class="avatar-img rounded-circle" />
                                     </div>
                                     <div class="u-text">
                                         <h4>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h4>

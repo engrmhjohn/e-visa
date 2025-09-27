@@ -33,6 +33,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::delete('/application/delete/{id}', [CMSController::class, 'deleteApplication'])->name('application.delete');
     Route::get('/application/{application}/pdf', [PdfController::class, 'generateApplicationPdf'])->name('application.pdf.download');
     Route::get('/application/{application}/pdf/view', [PdfController::class, 'viewApplicationPdf'])->name('application.pdf.view');
+    Route::get('/admin/applications/{application}/edit', [ApplicationController::class, 'editApplication'])->name('admin.applications.edit');
+    Route::post('/admin/applications/{application}/update-step/{step}', [ApplicationController::class, 'updateApplicationStep'])->name('admin.applications.update-step');
 
     Route::get('/optimize:clear', [MaintenanceController::class, 'optimizeClear']);
     Route::get('/storage:link', [MaintenanceController::class, 'storageLink']);
