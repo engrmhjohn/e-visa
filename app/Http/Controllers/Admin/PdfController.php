@@ -34,10 +34,7 @@ class PdfController extends Controller
         $pdf = PDF::loadView('pdf.application', $data);
 
         // Return PDF for download
-        return $pdf->download('visa-application-' . $application->id . '.pdf');
-        
-        // Alternative: Return PDF for inline viewing
-        // return $pdf->stream('visa-application-' . $application->id . '.pdf');
+        return $pdf->download($application->tracking_number . '.pdf');
     }
 
     public function viewApplicationPdf($applicationId)
