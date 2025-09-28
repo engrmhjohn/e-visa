@@ -138,7 +138,7 @@
                                                                 <strong>Place of Issue:</strong> {{ $application->personalInfo->place_of_issue }}
                                                             </div>
                                                             <div class="col-md-6">
-                                                                <strong>Expiration Date:</strong> {{ $application->personalInfo->passport_expiration_date }}
+                                                                <strong>Expiration Date:</strong> {{ $application->personalInfo->passport_expiration_date->format('d F Y') }}
                                                             </div>
                                                         </div>
 
@@ -475,7 +475,7 @@
                                                         <div class="row mb-3">
                                                             <div class="col-md-12">
                                                                 @if($application->travelInfo->company_approval_letter)
-                                                                <a href="{{ asset($application->travelInfo->company_approval_letter) }}" target="_blank">View Approval Letter</a>
+                                                                <img src="{{ asset($application->travelInfo->company_approval_letter) }}" alt="Approval Letter">
                                                                 @else
                                                                 N/A
                                                                 @endif

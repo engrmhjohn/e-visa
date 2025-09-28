@@ -9,7 +9,7 @@ use PDF;
 
 class PdfController extends Controller
 {
-    public function generateApplicationPdf($applicationId)
+        public function generateApplicationPdf($applicationId)
     {
         // Get the application with all relationships
         $application = ApplicationForm::with([
@@ -30,6 +30,9 @@ class PdfController extends Controller
 
         // Return PDF for download
         return $pdf->download($application->tracking_number . '.pdf');
+        
+        // Alternative: Return PDF for inline viewing
+        // return $pdf->stream('visa-application-' . $application->id . '.pdf');
     }
 
     public function viewApplicationPdf($applicationId)

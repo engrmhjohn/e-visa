@@ -865,30 +865,50 @@ class ApplicationController extends Controller
     }
 
     public function updateApplicationStep(ApplicationForm $application, Request $request, $step)
-{
-    try {
-        switch($step) {
-            case 1:
-                return $this->updateStep1($application, $request);
-            case 2:
-                return $this->updateStep2($application, $request);
-            default:
-                return redirect()->back()->with('error', 'Invalid step');
+    {
+        try {
+            switch($step) {
+                case 1:
+                    return $this->updateStep1($application, $request);
+                case 2:
+                    return $this->updateStep2($application, $request);
+                case 3:
+                    return $this->updateStep3($application, $request);
+                case 4:
+                    return $this->updateStep4($application, $request);
+                case 5:
+                    return $this->updateStep5($application, $request);
+                case 6:
+                    return $this->updateStep6($application, $request);
+                case 7:
+                    return $this->updateStep7($application, $request);
+                case 8:
+                    return $this->updateStep8($application, $request);
+                case 9:
+                    return $this->updateStep9($application, $request);
+                case 10:
+                    return $this->updateStep10($application, $request);
+                default:
+                    return redirect()->back()->with('error', 'Invalid step');
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Error updating information: ' . $e->getMessage())
+                ->withInput();
         }
-    } catch (\Exception $e) {
-        return redirect()->back()
-            ->with('error', 'Error updating information: ' . $e->getMessage())
-            ->withInput();
     }
-}
 
-private function updateStep1(ApplicationForm $application, Request $request)
-{
-    // Manually validate using your PersonalInfoRequest rules
-    $validatedData = $request->validate([
-// Uploads
-            'picture'            => 'required|file|mimes:jpg,jpeg,png|max:2048',
-            'passport_picture'   => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    private function updateStep1(ApplicationForm $application, Request $request)
+    {
+        // Check if files already exist in database
+        $hasExistingPicture = $application->personalInfo && $application->personalInfo->picture;
+        $hasExistingPassportPicture = $application->personalInfo && $application->personalInfo->passport_picture;
+
+        // Manually validate - make file fields nullable if they already exist
+        $validatedData = $request->validate([
+            // Uploads - make nullable if files exist
+            'picture'            => $hasExistingPicture ? 'nullable|file|mimes:jpg,jpeg,png|max:2048' : 'required|file|mimes:jpg,jpeg,png|max:2048',
+            'passport_picture'   => $hasExistingPassportPicture ? 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048' : 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
 
             // 1.1 Name
             'family_name'        => 'required|string|max:255',
@@ -923,9 +943,9 @@ private function updateStep1(ApplicationForm $application, Request $request)
             'issuing_country_id'     => 'required|exists:countries,id',
             'place_of_issue'         => 'required|string|max:255',
             'passport_expiration_date' => 'required|date|after:today',
-    ],
-    [
-        // Uploads
+        ],
+        [
+            // Uploads
             'picture.required'           => 'Profile picture is required.',
             'picture.mimes'              => 'Profile picture must be in JPG, JPEG or PNG format.',
             'passport_picture.required'  => 'Passport data page is required.',
@@ -965,55 +985,538 @@ private function updateStep1(ApplicationForm $application, Request $request)
             'place_of_issue.required'    => 'Place of issue is required.',
             'passport_expiration_date.required' => 'Passport expiration date is required.',
             'passport_expiration_date.after'    => 'Passport expiration date must be in the future.',
-        ]
-    );
+        ]);
 
+        // File handling
+        $picturePath = $application->personalInfo->picture ?? null;
+        $passportPicturePath = $application->personalInfo->passport_picture ?? null;
 
-    // File handling
-    $picturePath = $application->personalInfo->picture ?? null;
-    $passportPicturePath = $application->personalInfo->passport_picture ?? null;
+        if ($request->hasFile('picture')) {
+            if ($picturePath) deleteFile($picturePath);
+            $picturePath = uploadFile($request->file('picture'), 'uploads/profile-pictures');
+        }
+        // If no new file uploaded, keep the existing path
 
-    if ($request->hasFile('picture')) {
-        if ($picturePath) deleteFile($picturePath);
-        $picturePath = uploadFile($request->file('picture'), 'uploads/profile-pictures');
+        if ($request->hasFile('passport_picture')) {
+            if ($passportPicturePath) deleteFile($passportPicturePath);
+            $passportPicturePath = uploadFile($request->file('passport_picture'), 'uploads/passport-pictures');
+        }
+        // If no new file uploaded, keep the existing path
+
+        PersonalInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            array_merge($validatedData, [
+                'picture' => $picturePath,
+                'passport_picture' => $passportPicturePath,
+            ])
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 2])
+            ->with('success', 'Personal information updated successfully!');
     }
 
-    if ($request->hasFile('passport_picture')) {
-        if ($passportPicturePath) deleteFile($passportPicturePath);
-        $passportPicturePath = uploadFile($request->file('passport_picture'), 'uploads/passport-pictures');
+    private function updateStep2(ApplicationForm $application, Request $request)
+    {
+        // Copy rules from your VisaTypeRequest
+        $validatedData = $request->validate([
+            // 2.1 Type of visa & main purpose
+            'visa_type'     => 'required|in:Tourism,Business,Work Permit,Temporary Work',
+
+            // Tourist type (only if visa_type = L)
+            'tourist_type'  => 'nullable|in:tourist,business,work_permit',
+
+            // 2.2 Service type
+            'service_type'  => 'required|in:individual,group',
+
+            // 2.3 Visa Application Info
+            'visa_validity'     => 'required|integer|min:1|max:120', // max 10 years in months
+            'max_duration_stay' => 'required|integer|min:1|max:365', // max 1 year stay
+            'entries'           => 'required|in:single,multiple,work_permit',
+        ],
+        [
+            // Visa type
+            'visa_type.required' => 'Please select the type of visa you are applying for.',
+            'visa_type.in'       => 'Invalid visa type selected.',
+
+            // Tourist type
+            'tourist_type.in'    => 'Tourist type must be tourist, business, or work permit.',
+
+            // Service type
+            'service_type.required' => 'Please select a service type (individual or group).',
+            'service_type.in'       => 'Invalid service type selected.',
+
+            // Visa validity
+            'visa_validity.required' => 'Visa validity (in months) is required.',
+            'visa_validity.integer'  => 'Visa validity must be a number.',
+            'visa_validity.min'      => 'Visa validity must be at least 1 month.',
+            'visa_validity.max'      => 'Visa validity cannot exceed 120 months (10 years).',
+
+            // Max duration stay
+            'max_duration_stay.required' => 'Maximum duration of stay is required.',
+            'max_duration_stay.integer'  => 'Duration of stay must be a number.',
+            'max_duration_stay.min'      => 'Duration of stay must be at least 1 day.',
+            'max_duration_stay.max'      => 'Duration of stay cannot exceed 365 days.',
+
+            // Entries
+            'entries.required' => 'Please specify the type of entry.',
+            'entries.in'       => 'Entries must be single, multiple, or work permit.',
+        ]);
+
+        // Update visa type information - use validated data directly
+        VisaType::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 3])
+            ->with('success', 'Visa type information updated successfully!');
     }
 
-    PersonalInfo::updateOrCreate(
-        ['application_id' => $application->id],
-        $validatedData + [
-            'picture' => $picturePath,
-            'passport_picture' => $passportPicturePath,
-        ]
-    );
+    private function updateStep3(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            'occupation' => 'required|in:Businessperson,Company employee,Entertainer,Industrial/agricultural worker,Student,Member of parliament,Government official,Teacher,Researcher,Medical professional,Engineer/Technician,Self-employed,Unemployed,Retired,Other',
+            'work_exp_date_from' => 'nullable|date',
+            'work_exp_date_to' => 'nullable|date|after_or_equal:work_exp_date_from',
+            'employer_name' => 'nullable|string|max:255',
+            'employer_address' => 'nullable|string|max:255',
+            'employer_telephone' => 'nullable|string|max:50',
+            'supervisor_name' => 'nullable|string|max:255',
+            'supervisor_telephone' => 'nullable|string|max:50',
+            'position_name' => 'nullable|string|max:255',
+            'duty_name' => 'nullable|string|max:255',
+        ];
 
-    return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 2])
-        ->with('success', 'Personal information updated successfully!');
-}
+        $messages = [
+            'occupation.required' => 'Please select your current occupation.',
+            'occupation.in' => 'Invalid occupation selected.',
+            'work_exp_date_from.date' => 'The work experience "from" date must be a valid date.',
+            'work_exp_date_to.date' => 'The work experience "to" date must be a valid date.',
+            'work_exp_date_to.after_or_equal' => 'The "to" date cannot be earlier than the "from" date.',
+            'employer_name.max' => 'Employer name may not be greater than 255 characters.',
+            'employer_address.max' => 'Employer address may not be greater than 255 characters.',
+            'employer_telephone.max' => 'Employer telephone may not exceed 50 characters.',
+            'supervisor_name.max' => 'Supervisor name may not be greater than 255 characters.',
+            'supervisor_telephone.max' => 'Supervisor telephone may not exceed 50 characters.',
+            'position_name.max' => 'Position name may not be greater than 255 characters.',
+            'duty_name.max' => 'Duty name may not be greater than 255 characters.',
+        ];
 
-private function updateStep2(ApplicationForm $application, Request $request)
+        $validatedData = $request->validate($rules, $messages);
+
+        WorkInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 4])
+            ->with('success', 'Work information updated successfully!');
+    }
+
+    private function updateStep4(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            'institute_name' => 'required|string|max:255',
+            'degree_name' => 'required|in:Technical secondary school/high school or equivalent,Junior college/undergraduate degree or equivalent,Masters degree or equivalent,Doctoral degree or above,Other',
+            'major_degree' => 'nullable|string|max:255',
+        ];
+
+        $messages = [
+            'institute_name.required' => 'Please enter the name of your institute.',
+            'institute_name.string' => 'Institute name must be valid text.',
+            'institute_name.max' => 'Institute name may not exceed 255 characters.',
+            'degree_name.required' => 'Please select your highest diploma/degree.',
+            'degree_name.in' => 'Invalid degree option selected.',
+            'major_degree.string' => 'Major field must be valid text.',
+            'major_degree.max' => 'Major field may not exceed 255 characters.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        EducationInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 5])
+            ->with('success', 'Education information updated successfully!');
+    }
+
+    private function updateStep5(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            // 5.1 Current home address
+            'current_home_address' => 'required|string|max:255',
+            
+            // 5.2 Phone Number
+            'home_phone_number' => 'nullable|string|max:20',
+            
+            // 5.3 Mobile Phone Number
+            'home_mobile_number' => 'required|string|max:20',
+            
+            // 5.4 Email
+            'home_email' => 'nullable|email|max:255',
+            
+            // Father
+            'father_family_name' => 'required|string|max:100',
+            'father_givenname' => 'required|string|max:100',
+            'father_nationality_id' => 'required|exists:countries,id',
+            'father_dob' => 'required|date',
+            'father_siberia_origin' => 'boolean',
+            
+            // Mother
+            'mother_family_name' => 'required|string|max:100',
+            'mother_givenname' => 'required|string|max:100',
+            'mother_nationality_id' => 'required|exists:countries,id',
+            'mother_dob' => 'required|date',
+            'mother_siberia_origin' => 'boolean',
+            
+            // Children (optional)
+            'children_family_name' => 'nullable|string|max:100',
+            'children_givenname' => 'nullable|string|max:100',
+            'children_nationality_id' => 'nullable|exists:countries,id',
+            'children_dob' => 'nullable|date',
+        ];
+
+        $messages = [
+            // Address & Contacts
+            'current_home_address.required' => 'Please provide your current home address.',
+            'home_mobile_number.required' => 'Mobile phone number is required.',
+            'home_email.email' => 'Please enter a valid email address.',
+            
+            // Father
+            'father_family_name.required' => 'Father\'s family name is required.',
+            'father_givenname.required' => 'Father\'s given name is required.',
+            'father_nationality_id.required' => 'Please select father\'s nationality.',
+            'father_nationality_id.exists' => 'Invalid nationality selected for father.',
+            'father_dob.required' => 'Please provide father\'s date of birth.',
+            'father_dob.date' => 'Father\'s date of birth must be a valid date.',
+            
+            // Mother
+            'mother_family_name.required' => 'Mother\'s family name is required.',
+            'mother_givenname.required' => 'Mother\'s given name is required.',
+            'mother_nationality_id.required' => 'Please select mother\'s nationality.',
+            'mother_nationality_id.exists' => 'Invalid nationality selected for mother.',
+            'mother_dob.required' => 'Please provide mother\'s date of birth.',
+            'mother_dob.date' => 'Mother\'s date of birth must be a valid date.',
+            
+            // Children
+            'children_nationality_id.exists' => 'Invalid nationality selected for child.',
+            'children_dob.date' => 'Child\'s date of birth must be a valid date.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        FamilyInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 6])
+            ->with('success', 'Family information updated successfully!');
+    }
+
+    private function updateStep6(ApplicationForm $application, Request $request)
+    {
+        // Get the visa category from request
+        $visaCategory = $request->input('visa_category');
+
+        // Check if company approval letter already exists in database
+        $hasExistingApprovalLetter = $application->travelInfo && $application->travelInfo->company_approval_letter;
+
+        // Base rules
+        $rules = [
+            // 6.1 Visa Category
+            'visa_category' => 'required|in:tourist,business,work',
+
+            // 6.2 Inviting Person / Organization
+            'inviting_name' => 'required|string|max:255',
+            'inviting_relationship' => 'required|string|max:255',
+            'inviting_phone_number' => 'required|string|max:20',
+            'inviting_email' => 'nullable|email|max:255',
+            'inviting_city' => 'required|string|max:100',
+            'inviting_district' => 'nullable|string|max:100',
+            'inviting_post_code' => 'nullable|string|max:20',
+
+            // 6.3 Emergency Contact
+            'emergency_contact_family_name' => 'required|string|max:100',
+            'emergency_contact_givenname' => 'required|string|max:100',
+            'emergency_contact_relationship' => 'required|string|max:100',
+            'emergency_contact_phone_number' => 'required|string|max:20',
+            'emergency_contact_email' => 'nullable|email|max:255',
+
+            // 6.4 Who will pay
+            'travel_payer' => 'required|in:self,other,organization',
+
+            // 6.5 Same passport
+            'same_passport' => 'boolean',
+        ];
+
+        // Conditional rules based on visa category
+        if (in_array($visaCategory, ['tourist', 'business'])) {
+            $rules['hotel_name'] = 'required|string|max:255';
+            $rules['hotel_address'] = 'required|string|max:255';
+            $rules['company_approval_letter'] = 'nullable';
+        } elseif ($visaCategory === 'work') {
+            // Make company_approval_letter nullable if it already exists
+            $rules['company_approval_letter'] = $hasExistingApprovalLetter 
+                ? 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048' 
+                : 'required|file|mimes:jpg,jpeg,png,pdf|max:2048';
+            $rules['hotel_name'] = 'nullable';
+            $rules['hotel_address'] = 'nullable';
+        } else {
+            $rules['hotel_name'] = 'nullable|string|max:255';
+            $rules['hotel_address'] = 'nullable|string|max:255';
+            $rules['company_approval_letter'] = 'nullable';
+        }
+
+        $messages = [
+            // Visa Category
+            'visa_category.required' => 'Please select a visa category.',
+            'visa_category.in' => 'Visa category must be either Tourist, Business, or Work.',
+
+            // Hotel fields (conditional)
+            'hotel_name.required' => 'Hotel name is required for tourist/business visa.',
+            'hotel_address.required' => 'Hotel address is required for tourist/business visa.',
+
+            // Company approval letter (conditional)
+            'company_approval_letter.required' => 'Company approval letter is required for work visa.',
+            'company_approval_letter.file' => 'Company approval letter must be a file.',
+            'company_approval_letter.mimes' => 'Company approval letter must be a JPG, JPEG, PNG, or PDF file.',
+            'company_approval_letter.max' => 'Company approval letter must not exceed 2MB.',
+
+            // Inviting person
+            'inviting_name.required' => 'Please provide the name of the inviting person/organization.',
+            'inviting_relationship.required' => 'Please specify your relationship with the inviting person/organization.',
+            'inviting_phone_number.required' => 'Inviting person\'s phone number is required.',
+            'inviting_email.email' => 'Please enter a valid email for the inviting person.',
+            'inviting_city.required' => 'Please enter the city of the inviting person/organization.',
+
+            // Emergency contact
+            'emergency_contact_family_name.required' => 'Emergency contact family name is required.',
+            'emergency_contact_givenname.required' => 'Emergency contact given name is required.',
+            'emergency_contact_relationship.required' => 'Emergency contact relationship is required.',
+            'emergency_contact_phone_number.required' => 'Emergency contact phone number is required.',
+            'emergency_contact_email.email' => 'Please enter a valid email for the emergency contact.',
+
+            // Travel payer
+            'travel_payer.required' => 'Please select who will pay for this travel.',
+            'travel_payer.in' => 'Travel payer must be self, other, or organization.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        // File handling for company approval letter
+        $companyApprovalLetterPath = $application->travelInfo->company_approval_letter ?? null;
+
+        if ($request->hasFile('company_approval_letter')) {
+            if ($companyApprovalLetterPath) {
+                deleteFile($companyApprovalLetterPath);
+            }
+            $companyApprovalLetterPath = uploadFile($request->file('company_approval_letter'), 'uploads/approval-letters');
+        }
+        // If no new file is uploaded, keep the existing path
+
+        TravelInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            array_merge($validatedData, [
+                'company_approval_letter' => $companyApprovalLetterPath,
+            ])
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 7])
+            ->with('success', 'Travel information updated successfully!');
+    }
+
+    private function updateStep7(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            'travel_siberia' => 'nullable|in:yes,no',
+            'previous_siberia_visa' => 'nullable|in:yes,no',
+            'other_country_visa' => 'nullable|in:yes,no',
+            'visited_last_12_months' => 'nullable|in:yes,no',
+        ];
+
+        $messages = [
+            'travel_siberia.in' => 'Answer must be Yes or No for "Have you ever been to Siberia?".',
+            'previous_siberia_visa.in' => 'Answer must be Yes or No for "Have you ever gotten a Siberian visa?".',
+            'other_country_visa.in' => 'Answer must be Yes or No for "Do you have any valid visa issued by other countries?".',
+            'visited_last_12_months.in' => 'Answer must be Yes or No for "Have you visited any countries in the last 12 months?".',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        PreviousTravelInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 8])
+            ->with('success', 'Previous travel information updated successfully!');
+    }
+
+    private function updateStep8(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            'refused_visa' => 'nullable|in:yes,no',
+            'visa_canceled' => 'nullable|in:yes,no',
+            'illegal_entry' => 'nullable|in:yes,no',
+            'criminal_record' => 'nullable|in:yes,no',
+            'health_issue' => 'nullable|in:yes,no',
+            'epidemic_visit' => 'nullable|in:yes,no',
+            'special_skill' => 'nullable|in:yes,no',
+            'military_service' => 'nullable|in:yes,no',
+            'paramilitary' => 'nullable|in:yes,no',
+            'organization_work' => 'nullable|in:yes,no',
+            'other_declaration' => 'nullable|in:yes,no',
+        ];
+
+        $messages = [
+            'refused_visa.in' => 'Please answer Yes or No for "Have you ever been refused a visa?".',
+            'visa_canceled.in' => 'Please answer Yes or No for "Has your visa ever been canceled?".',
+            'illegal_entry.in' => 'Please answer Yes or No for "Have you ever made an illegal entry or overstayed in a country?".',
+            'criminal_record.in' => 'Please answer Yes or No for "Do you have any criminal record?".',
+            'health_issue.in' => 'Please answer Yes or No for "Do you have any serious health issues?".',
+            'epidemic_visit.in' => 'Please answer Yes or No for "Have you visited epidemic areas in the past?".',
+            'special_skill.in' => 'Please answer Yes or No for "Do you possess any special skills?".',
+            'military_service.in' => 'Please answer Yes or No for "Have you ever served in the military?".',
+            'paramilitary.in' => 'Please answer Yes or No for "Have you ever been involved in any paramilitary activities?".',
+            'organization_work.in' => 'Please answer Yes or No for "Have you worked with any organizations related to security or defense?".',
+            'other_declaration.in' => 'Please answer Yes or No for "Do you have any other declaration to make?".',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        OtherInfo::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 9])
+            ->with('success', 'Other information updated successfully!');
+    }
+
+    private function updateStep9(ApplicationForm $application, Request $request)
+    {
+        $rules = [
+            'declaration_type' => 'required|in:applicant,behalf',
+            'agree' => 'accepted',
+        ];
+
+        $messages = [
+            'declaration_type.required' => 'Please select who is filling in the form (Applicant or On behalf of Applicant).',
+            'declaration_type.in' => 'Invalid declaration type selected.',
+            'agree.accepted' => 'You must agree with the declaration before proceeding.',
+        ];
+
+        $validatedData = $request->validate($rules, $messages);
+
+        Declaration::updateOrCreate(
+            ['application_id' => $application->id],
+            $validatedData
+        );
+
+        return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 10])
+            ->with('success', 'Declaration updated successfully!');
+    }
+
+    private function updateStep10(ApplicationForm $application, Request $request)
 {
-    // Copy rules from your VisaTypeRequest
-    $validatedData = $request->validate([
-        'visa_type' => 'required|in:tourist,business,work,student,transit',
-        'tourist_type' => 'nullable|in:single,multiple',
-        'service_type' => 'required|in:normal,express,premium',
-        'visa_validity' => 'required|in:1_month,3_months,6_months,1_year',
-        'max_duration_stay' => 'required|in:15_days,30_days,90_days,180_days',
-        'entries' => 'required|in:single,double,multiple',
-    ]);
+    $fileRule = 'file|mimes:jpg,jpeg,png,pdf|max:2048'; // 2MB max
 
-    VisaType::updateOrCreate(
+    // Check which files already exist in the database
+    $existingMaterials = $application->materials;
+
+    $rules = [
+        // Other country visas (multi slot) - make required only if no existing files
+        'other_country_visa1' => $existingMaterials && $existingMaterials->other_country_visa1 ? "nullable|$fileRule" : "required|$fileRule",
+        'other_country_visa2' => "nullable|$fileRule",
+        'other_country_visa3' => "nullable|$fileRule",
+        'other_country_visa4' => "nullable|$fileRule",
+        'other_country_visa5' => "nullable|$fileRule",
+        'other_country_visa6' => "nullable|$fileRule",
+
+        // Itinerary - make required only if no existing file
+        'itinerary_siberia' => $existingMaterials && $existingMaterials->itinerary_siberia ? "nullable|$fileRule" : "required|$fileRule",
+
+        // Hotel requirement - make required only if no existing file
+        'hote_requirement' => $existingMaterials && $existingMaterials->hote_requirement ? "nullable|$fileRule" : "required|$fileRule",
+
+        // Bank statements (multi slot) - make required only if no existing files
+        'bank_statement1' => $existingMaterials && $existingMaterials->bank_statement1 ? "nullable|$fileRule" : "required|$fileRule",
+        'bank_statement2' => "nullable|$fileRule",
+        'bank_statement3' => "nullable|$fileRule",
+        'bank_statement4' => "nullable|$fileRule",
+
+        // Air ticket - make required only if no existing file
+        'air_ticket' => $existingMaterials && $existingMaterials->air_ticket ? "nullable|$fileRule" : "required|$fileRule",
+
+        // Invitation letter - make required only if no existing file
+        'invitation_letter' => $existingMaterials && $existingMaterials->invitation_letter ? "nullable|$fileRule" : "required|$fileRule",
+    ];
+
+    $messages = [
+        // Other country visas
+        'other_country_visa1.required' => 'Please upload at least one valid visa from another country.',
+        'other_country_visa1.mimes' => 'Visa file must be JPG, JPEG, PNG or PDF format.',
+        'other_country_visa1.max' => 'Visa file size must not exceed 2MB.',
+
+        // Itinerary
+        'itinerary_siberia.required' => 'Please upload your itinerary in Siberia.',
+        'itinerary_siberia.mimes' => 'Itinerary file must be JPG, JPEG, PNG or PDF format.',
+        'itinerary_siberia.max' => 'Itinerary file size must not exceed 2MB.',
+
+        // Hotel
+        'hote_requirement.required' => 'Hotel reservation with complete payment is required.',
+        'hote_requirement.mimes' => 'Hotel reservation must be JPG, JPEG, PNG or PDF.',
+        'hote_requirement.max' => 'Hotel reservation file size must not exceed 2MB.',
+
+        // Bank statements
+        'bank_statement1.required' => 'At least one bank statement is required.',
+        'bank_statement1.mimes' => 'Bank statement must be JPG, JPEG, PNG or PDF.',
+        'bank_statement1.max' => 'Bank statement file must not exceed 2MB.',
+
+        // Air ticket
+        'air_ticket.required' => 'Round trip air ticket is required.',
+        'air_ticket.mimes' => 'Air ticket must be JPG, JPEG, PNG or PDF.',
+        'air_ticket.max' => 'Air ticket file must not exceed 2MB.',
+
+        // Invitation letter
+        'invitation_letter.required' => 'Invitation letter is required.',
+        'invitation_letter.mimes' => 'Invitation letter must be JPG, JPEG, PNG or PDF.',
+        'invitation_letter.max' => 'Invitation letter file must not exceed 2MB.',
+    ];
+
+    $validatedData = $request->validate($rules, $messages);
+
+    // File handling for all uploaded files
+    $filePaths = [];
+    $fileFields = [
+        'other_country_visa1', 'other_country_visa2', 'other_country_visa3', 'other_country_visa4', 'other_country_visa5', 'other_country_visa6',
+        'itinerary_siberia', 'hote_requirement', 'bank_statement1', 'bank_statement2', 'bank_statement3', 'bank_statement4',
+        'air_ticket', 'invitation_letter'
+    ];
+
+    foreach ($fileFields as $field) {
+        $existingFilePath = $existingMaterials ? $existingMaterials->$field : null;
+        
+        if ($request->hasFile($field)) {
+            if ($existingFilePath) {
+                deleteFile($existingFilePath);
+            }
+            $filePaths[$field] = uploadFile($request->file($field), 'uploads/materials');
+        } else {
+            // Keep existing file path if no new file uploaded
+            $filePaths[$field] = $existingFilePath;
+        }
+    }
+
+    Material::updateOrCreate(
         ['application_id' => $application->id],
-        $validatedData
+        $filePaths
     );
 
-    return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 3])
-        ->with('success', 'Visa type information updated successfully!');
+    return redirect()->route('admin.applications.edit', ['application' => $application->id, 'step' => 10])
+        ->with('success', 'Upload materials updated successfully!');
 }
-
 }

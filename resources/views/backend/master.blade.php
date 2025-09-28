@@ -32,7 +32,7 @@
     <!-- Dropify CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/css/dropify.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('backendAssets') }}/css/bootstrap.min.css" />
     <link rel="stylesheet" href="{{ asset('backendAssets') }}/css/plugins.min.css" />
@@ -84,6 +84,8 @@
 
     <script src="{{ asset('backendAssets') }}/tinymce/tinymce.min.js"></script>
     <script src="{{ asset('backendAssets') }}/tinymce/plugins/code/plugin.min.js"></script>
+
+       <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Kaiadmin JS -->
     <script src="{{ asset('backendAssets') }}/js/kaiadmin.min.js"></script>
@@ -138,6 +140,6 @@
     tinymce.init({ selector: '#default' });
     tinymce.init({ selector: '#dark', toolbar: 'undo redo styleselect bold italic alignleft aligncenter alignright bullist numlist outdent indent code', plugins: 'code' });
 </script>
-
+@stack('script')
 </body>
 </html>

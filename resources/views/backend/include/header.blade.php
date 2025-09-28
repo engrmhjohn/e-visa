@@ -3,7 +3,7 @@
         <!-- Logo Header -->
         <div class="logo-header" data-background-color="dark">
             <a href="{{ route('dashboard') }}" class="logo">
-                <img src="{{ asset('frontendAssets') }}/img/logo.png" alt="navbar brand" class="navbar-brand" height="20" />
+                <img src="{{ asset('frontendAssets/img/logo.svg') }}" alt="navbar brand" class="navbar-brand" height="20" />
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">
@@ -36,7 +36,7 @@
                 <li class="nav-item topbar-user dropdown hidden-caret">
                     <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                         <div class="avatar-sm">
-                            <img src="{{ asset('frontendAssets') }}/img/avatar.jpg" alt="Avatar" class="avatar-img rounded-circle" />
+                            <img src="{{ asset('frontendAssets') }}/img/avatar.png" alt="Avatar" class="avatar-img rounded-circle" />
                         </div>
                         <span class="profile-username">
                             <span class="op-7">Hi,</span>
@@ -48,7 +48,7 @@
                             <li>
                                 <div class="user-box">
                                     <div class="avatar-lg">
-                                           <img src="{{ asset('frontendAssets') }}/img/avatar.jpg" alt="Avatar" class="avatar-img rounded-circle" />
+                                           <img src="{{ asset('frontendAssets') }}/img/avatar.png" alt="Avatar" class="avatar-img rounded-circle" />
                                     </div>
                                     <div class="u-text">
                                         <h4>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</h4>

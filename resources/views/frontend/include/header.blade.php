@@ -2,9 +2,9 @@
         <div class="container">
 
             <!-- Logo -->
-            <a class="navbar-brand fw-bold" href="{{ route('/') }}">
-                {{-- <img src="https://via.placeholder.com/40" alt="Logo" class="me-2"> --}}
-                <h1 class="mb-0 fw-bold">E-Visa</h1>
+            <a class="navbar-brand fw-bold mb-0" href="{{ route('/') }}">
+                <img src="{{ asset('frontendAssets/img/logo.svg') }}" alt="Logo" height="55" class="me-2">
+                {{-- <h1 class="mb-0 fw-bold">E-Visa</h1> --}}
             </a>
 
             <i class="mobile-nav-toggle bi bi-list"></i>

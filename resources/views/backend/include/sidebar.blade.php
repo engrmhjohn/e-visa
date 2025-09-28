@@ -3,8 +3,9 @@
         <!-- Logo Header -->
         <div class="logo-header" data-background-color="dark">
             <a href="{{ route('dashboard') }}" class="logo text-white text-center fw-bold">
+                   <img src="{{ asset('frontendAssets/img/logo.svg') }}" alt="navbar brand" class="navbar-brand" height="50" />
                 {{-- <img src="{{ asset('frontendAssets') }}/img/logo.png" alt="navbar brand" class="navbar-brand bg-white" height="40" /> --}}
-                E-Visa Dashboard
+                {{-- E-Visa Dashboard --}}
             </a>
             <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">
